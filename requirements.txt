@@ -1,12 +1,14 @@
-# WebRTC and HTTP server
-aiohttp>=3.9.0
-aiortc>=1.6.0
-av>=12.0.0
+# WebRTC and HTTP server (Python 3.7 compatible; matches the frankmocap conda env)
+# NOTE: aiohttp 3.9+ drops Python 3.7 support.
+aiohttp>=3.8.6,<3.9
+# NOTE: newer aiortc/av releases may drop Python 3.7; pin to known-good range.
+aiortc==1.5.0
+av==10.0.0
 
 # Computer vision and image processing
-opencv-python>=4.8.0
-numpy>=1.24.0
-Pillow>=10.0.0
+opencv-python>=4.5.0,<5
+numpy>=1.19.0,<1.22
+Pillow>=8.0.0,<10
 
 # Deep learning (PyTorch)
 # Note: Install PyTorch with CUDA support from https://pytorch.org/
@@ -25,4 +27,4 @@ Pillow>=10.0.0
 # chumpy>=0.70
 
 # Optional but recommended
-python-dotenv>=1.0.0
+python-dotenv>=0.21.0,<2
