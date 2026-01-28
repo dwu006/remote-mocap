@@ -1,0 +1,28 @@
+# WebRTC and HTTP server
+aiohttp>=3.9.0
+aiortc>=1.6.0
+av>=12.0.0
+
+# Computer vision and image processing
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Deep learning (PyTorch)
+# Note: Install PyTorch with CUDA support from https://pytorch.org/
+# Example for CUDA 11.8:
+# torch>=2.0.0
+# torchvision>=0.15.0
+# For CPU-only:
+# torch>=2.0.0+cpu
+# torchvision>=0.15.0+cpu
+
+# FrankMocap dependencies (check frankmocap/requirements.txt for exact versions)
+# These are typically included when you install FrankMocap:
+# smplx>=0.1.28
+# trimesh>=3.9.0
+# pyrender>=0.1.45
+# chumpy>=0.70
+
+# Optional but recommended
+python-dotenv>=1.0.0
