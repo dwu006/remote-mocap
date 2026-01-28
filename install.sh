@@ -257,12 +257,22 @@ install_system_deps() {
             libglu1-mesa-dev \
             freeglut3-dev \
             libosmesa6-dev \
-            ffmpeg
+            ffmpeg \
+            pkg-config \
+            libavformat-dev \
+            libavcodec-dev \
+            libavdevice-dev \
+            libavutil-dev \
+            libavfilter-dev \
+            libswscale-dev \
+            libswresample-dev
         print_success "System dependencies installed"
     else
         print_warning "apt-get not found. Please install system dependencies manually:"
         echo "  - libglu1-mesa, libxi-dev, libxmu-dev, libglu1-mesa-dev"
         echo "  - freeglut3-dev, libosmesa6-dev, ffmpeg"
+        echo "  - pkg-config, libavformat-dev, libavcodec-dev, libavdevice-dev, libavutil-dev"
+        echo "  - libavfilter-dev, libswscale-dev, libswresample-dev (for PyAV/aiortc)"
     fi
 }
 
@@ -272,13 +282,22 @@ install_webrtc_deps() {
     
     cd "$SCRIPT_DIR"
     
-    # Install from requirements.txt
+    # Install from requirements.txt (case-sensitive filesystems may differ)
+    local req_file=""
     if [ -f "requirements.txt" ]; then
-        pip install -r requirements.txt
-        print_success "WebRTC dependencies installed from requirements.txt"
+        req_file="requirements.txt"
+    elif [ -f "Requirements.txt" ]; then
+        req_file="Requirements.txt"
+    fi
+
+    if [ -n "$req_file" ]; then
+        print_status $BLUE "Installing Python deps from ${req_file}..."
+        python -m pip install -r "$req_file"
+        print_success "WebRTC dependencies installed from ${req_file}"
     else
-        print_warning "requirements.txt not found, installing manually..."
-        pip install aiohttp aiortc av opencv-python numpy python-dotenv
+        print_error "No requirements file found (expected requirements.txt)."
+        print_error "Please create requirements.txt or rerun from the repo root."
+        exit 1
     fi
 }
 
