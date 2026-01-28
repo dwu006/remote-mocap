@@ -3,7 +3,7 @@
 # Combines FrankMocap + WebRTC server setup
 # Optimized for GPU servers with cross-platform compatibility
 
-set -e  # Exit on error
+set -euo pipefail  # Exit on error, undefined var, and fail on pipe errors
 
 # Colors for output
 RED='\033[0;31m'
@@ -127,14 +127,11 @@ setup_conda_env() {
     
     # Check if environment exists
     if conda env list | grep -q "^${CONDA_ENV_NAME} "; then
-        print_warning "Conda environment '${CONDA_ENV_NAME}' already exists"
-        read -p "Do you want to recreate it? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            print_status $YELLOW "Removing existing environment..."
+        if [[ "${FORCE_RECREATE:-0}" == "1" ]]; then
+            print_status $YELLOW "FORCE_RECREATE=1 -> removing existing environment '${CONDA_ENV_NAME}'..."
             conda env remove -n ${CONDA_ENV_NAME} -y
         else
-            print_success "Using existing environment"
+            print_success "Environment '${CONDA_ENV_NAME}' already exists; reusing (set FORCE_RECREATE=1 to rebuild)"
             return 0
         fi
     fi
@@ -161,23 +158,27 @@ activate_conda_env() {
     print_success "Conda environment activated"
 }
 
+configure_conda_channels() {
+    print_status $BLUE "Configuring conda channels (env-local, strict priority)..."
+    conda config --env --set channel_priority strict
+    # Ensure we only pull from pytorch + defaults to avoid mixed MKL/OpenMP stacks
+    conda config --env --remove channels conda-forge >/dev/null 2>&1 || true
+    conda config --env --add channels pytorch
+    conda config --env --add channels defaults
+    print_success "Conda channels set to: pytorch, defaults (strict)"
+}
+
 # Function to install PyTorch (FrankMocap official versions)
 install_pytorch() {
     print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} (FrankMocap official)..."
     
-    # Install CUDA toolkit first if GPU available
-    if [ "$CUDA_AVAILABLE" = "true" ]; then
-        print_status $BLUE "Installing CUDA toolkit ${CUDA_VERSION_OFFICIAL}..."
-        conda install cudatoolkit=${CUDA_VERSION_OFFICIAL} cudnn=7.6.0 -y
-    fi
-    
     # Install PyTorch and torchvision with official FrankMocap versions
     if [ "$CUDA_AVAILABLE" = "true" ]; then
-        print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} with CUDA ${CUDA_VERSION_OFFICIAL}..."
-        conda install -c pytorch pytorch==${PYTORCH_VERSION} torchvision cudatoolkit=${CUDA_VERSION_OFFICIAL} -y
+        print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} with CUDA ${CUDA_VERSION_OFFICIAL} from pytorch/defaults..."
+        conda install -y -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cudatoolkit=${CUDA_VERSION_OFFICIAL}
     else
         print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} CPU version..."
-        conda install -c pytorch pytorch==${PYTORCH_VERSION} torchvision cpuonly -y
+        conda install -y -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cpuonly
     fi
     
     # Verify PyTorch installation
@@ -500,6 +501,7 @@ main() {
     check_conda
     setup_conda_env
     activate_conda_env
+    configure_conda_channels
     install_pytorch
     install_system_deps
     setup_frankmocap
