@@ -27,10 +27,11 @@ Browser (Client)          WebRTC          Server (GPU)
 
 ### Server Requirements
 
-- **Python 3.9+** (3.10 recommended)
+- **Linux GPU server recommended** (Vast.ai, RunPod, AWS, etc.)
+- **Conda (Miniconda/Anaconda)**
+- **Python 3.7** (FrankMocap legacy compatibility; `install.sh` sets this up)
 - **NVIDIA GPU** with CUDA support (recommended) or CPU (slower)
-- **CUDA toolkit** (if using GPU)
-- **PyTorch** with CUDA support (install from [pytorch.org](https://pytorch.org/))
+- **NVIDIA drivers installed on the host** (`nvidia-smi` should work)
 
 ### Client Requirements
 
@@ -39,64 +40,37 @@ Browser (Client)          WebRTC          Server (GPU)
 
 ## Installation
 
-**Important:** FrankMocap only needs to be installed on the **remote GPU server** (where inference happens). Your laptop just needs a web browser - no installation needed! See [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md) for details.
+**Important:** Install everything only on the **remote GPU server** (where inference happens). Your laptop just needs a web browser (open `client.html`) — no Python / CUDA / FrankMocap install on the laptop.
 
-### 1. Clone FrankMocap Repository
+### Recommended (one command on the GPU server)
 
-If you haven't already, clone the FrankMocap repository:
-
-```bash
-git clone https://github.com/facebookresearch/frankmocap.git
-```
-
-Or if you've already cloned it, make sure it's in the `frankmocap/` directory relative to this project.
-
-### 2. Install FrankMocap Dependencies
-
-Follow the [FrankMocap installation instructions](https://github.com/facebookresearch/frankmocap/blob/main/docs/INSTALL.md):
+On the GPU server:
 
 ```bash
-cd frankmocap
-# Install dependencies as per FrankMocap README
-# This typically includes:
-# - Installing PyTorch with CUDA
-# - Installing SMPL models
-# - Downloading pretrained weights
+git clone <this-repo-url>
+cd remote-mocap
+
+# If you need to rebuild the conda env from scratch:
+FORCE_RECREATE=1 bash install.sh
+
+# Otherwise (reuse existing env if present):
+bash install.sh
 ```
 
-### 3. Download FrankMocap Weights
+### SMPL / SMPL-X models (required)
 
-Download the required model weights:
+FrankMocap requires the SMPL assets downloaded from the official sites (registration required). Place them here:
 
-```bash
-cd frankmocap
-# Run the download script (check FrankMocap README for exact command)
-# Typically something like:
-# bash scripts/download_weights.sh
-```
+- `frankmocap/smpl/basicModel_neutral_lbs_10_207_0_v1.0.0.pkl`
+- `frankmocap/smpl/SMPLX_NEUTRAL.pkl`
 
-Make sure the following files exist:
-- `frankmocap/extra_data/body_module/pretrained_weights/` (body model weights)
-- `frankmocap/extra_data/hand_module/pretrained_weights/` (hand model weights)
-- `frankmocap/extra_data/smpl/` (SMPL model files)
+The installer copies them into FrankMocap’s expected location:
+- `frankmocap/extra_data/smpl/`
 
-### 4. Install Python Dependencies
+### FrankMocap reference docs
 
-Install the required Python packages:
-
-```bash
-# Create virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install PyTorch with CUDA (adjust for your CUDA version)
-# Visit https://pytorch.org/ for the correct command
-# Example for CUDA 11.8:
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-
-# Install other dependencies
-pip install -r requirements.txt
-```
+If you want to install FrankMocap manually, follow their upstream docs:
+- [FrankMocap installation instructions](https://github.com/facebookresearch/frankmocap/blob/main/docs/INSTALL.md)
 
 ### 5. Verify Installation
 

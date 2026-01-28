@@ -137,7 +137,8 @@ setup_conda_env() {
     fi
     
     print_status $BLUE "Creating conda environment '${CONDA_ENV_NAME}'..."
-    conda create -n ${CONDA_ENV_NAME} python=${PYTHON_VERSION} -y
+    # Avoid pulling Python runtime bits from conda-forge via a user's global ~/.condarc
+    conda create -y --override-channels -c defaults -n ${CONDA_ENV_NAME} python=${PYTHON_VERSION}
     
     print_success "Conda environment created"
 }
@@ -161,11 +162,13 @@ activate_conda_env() {
 configure_conda_channels() {
     print_status $BLUE "Configuring conda channels (env-local, strict priority)..."
     conda config --env --set channel_priority strict
-    # Ensure we only pull from pytorch + defaults to avoid mixed MKL/OpenMP stacks
-    conda config --env --remove channels conda-forge >/dev/null 2>&1 || true
+    # Ensure we only pull from pytorch + defaults to avoid mixed MKL/OpenMP stacks.
+    # Note: users often have conda-forge in their global ~/.condarc; we'll override channels
+    # for critical installs too, but this keeps the env config clean.
+    conda config --env --remove-key channels >/dev/null 2>&1 || true
     conda config --env --add channels pytorch
     conda config --env --add channels defaults
-    print_success "Conda channels set to: pytorch, defaults (strict)"
+    print_success "Conda env channels set to: pytorch, defaults (strict)"
 }
 
 # Function to install PyTorch (FrankMocap official versions)
@@ -175,11 +178,16 @@ install_pytorch() {
     # Install PyTorch and torchvision with official FrankMocap versions
     if [ "$CUDA_AVAILABLE" = "true" ]; then
         print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} with CUDA ${CUDA_VERSION_OFFICIAL} from pytorch/defaults..."
-        conda install -y -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cudatoolkit=${CUDA_VERSION_OFFICIAL}
+        conda install -y --override-channels -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cudatoolkit=${CUDA_VERSION_OFFICIAL}
     else
         print_status $BLUE "Installing PyTorch ${PYTORCH_VERSION} CPU version..."
-        conda install -y -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cpuonly
+        conda install -y --override-channels -c pytorch -c defaults pytorch==${PYTORCH_VERSION} torchvision cpuonly
     fi
+
+    # Guardrail: PyTorch 1.6 can break if a modern conda-forge MKL/OpenMP stack is pulled in.
+    # Pin a known-good Intel runtime combo from defaults/anaconda.
+    print_status $BLUE "Pinning Intel MKL/OpenMP runtime for PyTorch 1.6 compatibility..."
+    conda install -y --override-channels -c defaults mkl=2020.2 intel-openmp=2020.2 || true
     
     # Verify PyTorch installation
     python3 -c "
