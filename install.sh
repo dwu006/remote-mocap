@@ -251,6 +251,7 @@ install_system_deps() {
         print_status $BLUE "Installing OpenGL and system dependencies..."
         sudo apt-get update
         sudo apt-get install -y \
+            build-essential \
             libglu1-mesa \
             libxi-dev \
             libxmu-dev \
@@ -292,6 +293,9 @@ install_webrtc_deps() {
 
     if [ -n "$req_file" ]; then
         print_status $BLUE "Installing Python deps from ${req_file}..."
+        # Python 3.7: keep pip/setuptools on the last compatible versions, otherwise installs can fail
+        # and wheel selection (manylinux tags) can be broken on older pip.
+        python -m pip install -U "pip<23.1" "setuptools<68" "wheel"
         python -m pip install -r "$req_file"
         print_success "WebRTC dependencies installed from ${req_file}"
     else
