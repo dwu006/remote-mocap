@@ -1,7 +1,7 @@
 *.swp
 *.jpg
 *.png
-smpl/
+
 tmp/
 pretrained_models/
 .vscode/
@@ -13,7 +13,6 @@ evaluate_results/
 *.pyc
 *.npy
 test_log.txt
-*.pkl
 pretrained/
 render_result/
 lightweight-human-pose-estimation.pytorch/
@@ -27,7 +26,7 @@ detectors/
 data
 samples_all/
 *.zip
-extra_data/
+
 sample_data/
 mocap_output/
 demo.sh
